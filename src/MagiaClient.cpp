@@ -3,6 +3,7 @@
 #include <android/log.h>
 #include <dobby.h>
 #include <memory.h>
+#include <sys/mman.h>
 #include <dlfcn.h>
 #include <cstdio>
 #include <cstdlib>
@@ -460,14 +461,25 @@ pthread_mutex_t *http2SessionSetMaxConnectionNum(uintptr_t *session, int max) {
     return http2SessionSetMaxConnectionNumOld(session, max);
 }
 
+static bool is_criNcv_GetHardwareSamplingRate_ANDROID_Modified = false;
 uint32_t (*criNcv_GetHardwareSamplingRate_ANDROID_Hooked)();
 
 uint32_t criNcv_GetHardwareSamplingRate_ANDROID() {
+#if defined(__arm__)
+    if (is_criNcv_GetHardwareSamplingRate_ANDROID_Modified) {
+        uint32_t* value = (uint32_t*)(criNcv_GetHardwareSamplingRate_ANDROID_Hooked());
+        LOGI("instruction MODIFIED: criNcv_GetHardwareSamplingRate_ANDROID got %d at %p", *value, value);
+        return *value;
+    } else {
+        uint32_t value = criNcv_GetHardwareSamplingRate_ANDROID_Hooked();
+        LOGI("instruction not modified: criNcv_GetHardwareSamplingRate_ANDROID got %d", value);
+        return value;
+    }
+#else
     auto value = criNcv_GetHardwareSamplingRate_ANDROID_Hooked();
-    const uint32_t hooked_value = 44100;
-    LOGI("criNcv_GetHardwareSamplingRate_ANDROID got %d, returned %d", value, hooked_value);
-    value = hooked_value;
+    LOGI("criNcv_GetHardwareSamplingRate_ANDROID got %d", value);
     return value;
+#endif
 }
 
 void initialization_error(const char* error) {
@@ -530,8 +542,94 @@ void *hook_loop(void *arguments) {
 
     if (audioSampleRateFix != nullptr) {
         LOGD("Found criNcv_GetHardwareSamplingRate_ANDROID at %p.", (void *)audioSampleRateFix);
+#if defined(__arm__)
+        LOGI("mprotect rwx");
+        void* page_start = NULL;
+        int PageSize = sysconf(_SC_PAGE_SIZE);
+        LOGI("PageSize = %d", PageSize);
+        if (PageSize == -1) {
+            initialization_error("PageSize == -1 error");
+            pthread_exit(NULL);
+        }
+
+        int i = 0;
+        void* dst = NULL;
+        static const char* orig_instruction = "\x00\x00\x9f\xe7";
+        static const char* modified_instruction = "\x00\x00\x8f\xe0";
+
+        for (i = 0; i < 8; i++) {
+            dst = (void*)((long long)audioSampleRateFix + i * 4);
+            if (memcmp(dst, orig_instruction, 4) == 0) {
+                LOGI("found in audioSampleRateFix, i = %d, ptr = %p", i, dst);
+                break;
+            }
+            dst = NULL;
+        }
+
+        uint32_t *ptr;
+        if (dst != NULL) {
+            LOGI("immediate = %p", *(uint32_t*)((long long)dst + 8));
+
+            page_start = (void*)((long long)dst & ~(PageSize - 1));
+            LOGI("page_start = %p", page_start);
+            LOGI("mprotect ret = %d", mprotect(page_start, PageSize, PROT_READ | PROT_WRITE | PROT_EXEC));
+
+            memcpy(dst, modified_instruction, 4);
+            LOGI("modified instruction");
+            criNcv_GetHardwareSamplingRate_ANDROID_Hooked = (uint32_t (*)())audioSampleRateFix;
+            ptr = (uint32_t*)(criNcv_GetHardwareSamplingRate_ANDROID_Hooked());
+            LOGI("orig value: %d, read from ptr = %p", *ptr, ptr);
+            memcpy(dst, orig_instruction, 4);
+            if (memcmp(dst, orig_instruction, 4) == 0) {
+                LOGI("memcmp returned 0, recovered instruction");
+            } else {
+                LOGE("INSTRUCTION NOT RECOVERED");
+                is_criNcv_GetHardwareSamplingRate_ANDROID_Modified = true;
+            }
+        } else {
+            LOGI("target instruction not found, not modifying");
+        }
+#endif
         if (DobbyHook(audioSampleRateFix, (void *)criNcv_GetHardwareSamplingRate_ANDROID, (void **)&criNcv_GetHardwareSamplingRate_ANDROID_Hooked) == RS_SUCCESS) {
             LOGI("Successfully hooked criNcv_GetHardwareSamplingRate_ANDROID.");
+#if defined(__arm__)
+            dst = NULL;
+            void* cmpsrc = (void*)(is_criNcv_GetHardwareSamplingRate_ANDROID_Modified ? modified_instruction : orig_instruction);
+            for (i = 0; i < 16; i++) {
+                dst = (void*)((long long)audioSampleRateFix + i * 4);
+                if (memcmp(dst, cmpsrc, 4) == 0) {
+                    LOGI("found in audioSampleRateFix, i = %d, ptr = %p", i, dst);
+                    break;
+                }
+                dst = (void*)((long long)&criNcv_GetHardwareSamplingRate_ANDROID_Hooked + i * 4);
+                if (memcmp(dst, cmpsrc, 4) == 0) {
+                    LOGI("found in &criNcv_GetHardwareSamplingRate_ANDROID_Hooked, i = %d, ptr = %p", i, dst);
+                    break;
+                }
+                dst = (void*)((long long)criNcv_GetHardwareSamplingRate_ANDROID_Hooked + i * 4);
+                if (memcmp(dst, cmpsrc, 4) == 0) {
+                    LOGI("found in criNcv_GetHardwareSamplingRate_ANDROID_Hooked, i = %d, ptr = %p", i, dst);
+                    break;
+                }
+                dst = NULL;
+            }
+            if (dst != NULL) {
+                LOGI("immediate = %p", *(uint32_t*)((long long)dst + 8));
+
+                page_start = (void*)((long long)dst & ~(PageSize - 1));
+                LOGI("page_start = %p", page_start);
+                LOGI("mprotect ret = %d", mprotect(page_start, PageSize, PROT_READ | PROT_WRITE | PROT_EXEC));
+
+                memcpy(dst, modified_instruction, 4);
+                LOGI("modified instruction again");
+                ptr = (uint32_t*)criNcv_GetHardwareSamplingRate_ANDROID_Hooked();
+                LOGI("after hook: %d, read from ptr = %p", *ptr, ptr);
+                // do not recover this time
+                is_criNcv_GetHardwareSamplingRate_ANDROID_Modified = true;
+            } else {
+                LOGI("target instruction not found, not re-modifying");
+            }
+#endif
         }
         else {
             initialization_error("Unable to hook criNcv_GetHardwareSamplingRate_ANDROID.");
