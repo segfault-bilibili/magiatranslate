@@ -464,14 +464,9 @@ uint32_t (*criNcv_GetHardwareSamplingRate_ANDROID_Hooked)();
 
 uint32_t criNcv_GetHardwareSamplingRate_ANDROID() {
     auto value = criNcv_GetHardwareSamplingRate_ANDROID_Hooked();
-    switch (value) {
-        case 44100:
-        case 48000:
-            LOGI("[do nothing] criNcv_GetHardwareSamplingRate_ANDROID returned %d", value);
-            break;
-        default:
-            LOGW("[do nothing] criNcv_GetHardwareSamplingRate_ANDROID returned UNUSUAL VALUE %d (%p)", value, value);
-    }
+    const uint32_t hooked_value = 0;
+    LOGI("criNcv_GetHardwareSamplingRate_ANDROID got %d, returned %d", value, hooked_value);
+    value = hooked_value;
     return value;
 }
 
