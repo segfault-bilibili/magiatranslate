@@ -464,7 +464,7 @@ uint32_t (*criNcv_GetHardwareSamplingRate_ANDROID_Hooked)();
 
 uint32_t criNcv_GetHardwareSamplingRate_ANDROID() {
     auto value = criNcv_GetHardwareSamplingRate_ANDROID_Hooked();
-    const uint32_t hooked_value = 0;
+    const uint32_t hooked_value = 32123;
     LOGI("criNcv_GetHardwareSamplingRate_ANDROID got %d, returned %d", value, hooked_value);
     value = hooked_value;
     return value;
