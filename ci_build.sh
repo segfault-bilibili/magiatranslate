@@ -51,19 +51,4 @@ FAILSAFE_APK="MagiaTranslate_${VERSION}_failsafe.apk"
 mv "${RESULT}" "${BASEDIR}/${FAILSAFE_APK}"
 echo "FAILSAFE_APK=${FAILSAFE_APK}" >> "$GITHUB_ENV"
 
-# patch failsafe APK to build main APK
-echo "Unpacking APK without decompiling..."
-REUNPACK_DIR="${BASEDIR}/build/reunpacked/"
-rm -fr "${REUNPACK_DIR}"
-java -jar "${BASEDIR}/build/${MT_APKTOOL}" d --no-src --no-res "${FAILSAFE_APK}" -o "${REUNPACK_DIR}"
-echo "Applying audiofix..."
-node "${BASEDIR}/patches/audiofix.js" --wdir "${REUNPACK_DIR}" --overwrite
-echo "Rebuilding APK..."
-java -jar "${BASEDIR}/build/${MT_APKTOOL}" b "${REUNPACK_DIR}" -o "${RESULT}"
-echo "Signing APK..."
-${BASH} "${BASEDIR}/sign.sh" "${RESULT}"
-MAIN_APK="MagiaTranslate_${VERSION}.apk"
-mv "${RESULT}" "${BASEDIR}/${MAIN_APK}"
-echo "MAIN_APK=${MAIN_APK}" >> "$GITHUB_ENV"
-
 rm "${BASEDIR}/builder.jks"

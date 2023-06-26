@@ -17,7 +17,7 @@ APKSIGNER="${MT_APKSIGNER:-apksigner}" # ~/android-sdk/build-tools/apksigner
 
 ARMV7SRCAPK="${ARMV7SRCAPK:-${BASEDIR}/armv7apk/vanilla-armv7.apk}"
 
-MT_AUDIOFIX_3_0_1="${MT_AUDIOFIX_3_0_1:-Y}"
+MT_AUDIOFIX_3_0_1="${MT_AUDIOFIX_3_0_1:-N}"
 
 # arg-based
 SRCAPK="${1:-${BASEDIR}/apk/vanilla.apk}"

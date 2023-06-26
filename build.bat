@@ -113,7 +113,7 @@ echo Applying misc patches...
 REM call copy /Y "%~dp0\patches\images\story_ui_sprites00_patch.plist" "%~dp0\build\app\assets\package\story\story_ui_sprites00.plist"
 REM call copy /Y "%~dp0\patches\images\story_ui_sprites00_patch.png" "%~dp0\build\app\assets\package\story\story_ui_sprites00.png"
 
-if "%MT_AUDIOFIX_3_0_1%" == "" set MT_AUDIOFIX_3_0_1=Y
+if "%MT_AUDIOFIX_3_0_1%" == "" set MT_AUDIOFIX_3_0_1=N
 if "%MT_AUDIOFIX_3_0_1%" == "y" set MT_AUDIOFIX_3_0_1=Y
 if "%MT_AUDIOFIX_3_0_1%" == "Y" (
     REM Fix low-pitched audio bug since magireco 3.0.1
