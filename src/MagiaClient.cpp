@@ -464,6 +464,7 @@ pthread_mutex_t *http2SessionSetMaxConnectionNum(uintptr_t *session, int max) {
 uint32_t (*criNcv_GetHardwareSamplingRate_ANDROID_Hooked)();
 
 uint32_t criNcv_GetHardwareSamplingRate_ANDROID() {
+    LOGI("criNcv_GetHardwareSamplingRate_ANDROID");
     auto orig = criNcv_GetHardwareSamplingRate_ANDROID_Hooked();
     auto value = orig;
     value = 48000;
@@ -474,8 +475,10 @@ uint32_t criNcv_GetHardwareSamplingRate_ANDROID() {
 void *(*criNcv_SetHardwareSamplingRate_ANDROID_Hooked)(uint32_t value);
 
 void criNcv_SetHardwareSamplingRate_ANDROID(uint32_t value) {
+    LOGI("criNcv_SetHardwareSamplingRate_ANDROID");
     LOGI("set cached hardware sample rate to %d", value);
     criNcv_SetHardwareSamplingRate_ANDROID_Hooked(value);
+    LOGI("Done: set cached hardware sample rate to %d", value);
 }
 #endif
 
