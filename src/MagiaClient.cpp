@@ -556,6 +556,7 @@ void *hook_loop(void *arguments) {
         pthread_exit(NULL);
     }
 
+    /*
     void *setHWSampleRate = lookup_symbol(libLocation, "criNcv_SetHardwareSamplingRate_ANDROID");
 
     if (setHWSampleRate != nullptr) {
@@ -572,6 +573,7 @@ void *hook_loop(void *arguments) {
         initialization_error("Unable to hook criNcv_SetHardwareSamplingRate_ANDROID.");
         pthread_exit(NULL);
     }
+    */
 #endif
 
     // Hooks
