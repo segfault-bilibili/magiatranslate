@@ -476,9 +476,7 @@ void *(*criNcv_SetHardwareSamplingRate_ANDROID_Hooked)(uint32_t value);
 
 void criNcv_SetHardwareSamplingRate_ANDROID(uint32_t value) {
     LOGI("criNcv_SetHardwareSamplingRate_ANDROID");
-    auto orig = value;
-    value = 48000;
-    LOGI("set cached hardware sample rate to %d (orig %d)", value, orig);
+    LOGI("set cached hardware sample rate to %d", value);
     criNcv_SetHardwareSamplingRate_ANDROID_Hooked(value);
     LOGI("Done: set cached hardware sample rate to %d", value);
 }
