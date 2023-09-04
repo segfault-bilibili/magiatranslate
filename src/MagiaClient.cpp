@@ -476,7 +476,9 @@ void *(*criNcv_SetHardwareSamplingRate_ANDROID_Hooked)(uint32_t value);
 
 void criNcv_SetHardwareSamplingRate_ANDROID(uint32_t value) {
     LOGI("criNcv_SetHardwareSamplingRate_ANDROID");
-    LOGI("set cached hardware sample rate to %d", value);
+    auto orig = value;
+    value = 48000;
+    LOGI("set cached hardware sample rate to %d (orig %d)", value, orig);
     criNcv_SetHardwareSamplingRate_ANDROID_Hooked(value);
     LOGI("Done: set cached hardware sample rate to %d", value);
 }
@@ -539,6 +541,7 @@ void *hook_loop(void *arguments) {
 
 #if defined(MAGIA_TRANSLATE_AUDIOFIX_3_0_1)
     // audio pitch & speed fix
+/*
     void *getHWSampleRate = lookup_symbol(libLocation, "criNcv_GetHardwareSamplingRate_ANDROID");
 
     if (getHWSampleRate != nullptr) {
@@ -555,8 +558,8 @@ void *hook_loop(void *arguments) {
         initialization_error("Unable to hook criNcv_GetHardwareSamplingRate_ANDROID.");
         pthread_exit(NULL);
     }
+*/
 
-    /*
     void *setHWSampleRate = lookup_symbol(libLocation, "criNcv_SetHardwareSamplingRate_ANDROID");
 
     if (setHWSampleRate != nullptr) {
@@ -573,7 +576,6 @@ void *hook_loop(void *arguments) {
         initialization_error("Unable to hook criNcv_SetHardwareSamplingRate_ANDROID.");
         pthread_exit(NULL);
     }
-    */
 #endif
 
     // Hooks
