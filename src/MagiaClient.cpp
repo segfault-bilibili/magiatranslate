@@ -559,11 +559,17 @@ void *hook_loop(void *arguments) {
 */
 
     void *setHWSampleRate = lookup_symbol(libLocation, "criNcv_SetHardwareSamplingRate_ANDROID");
+    char *srcFunc;
 
     if (setHWSampleRate != nullptr) {
         LOGD("Found criNcv_SetHardwareSamplingRate_ANDROID at %p.", (void *)setHWSampleRate);
         if (DobbyHook(setHWSampleRate, (void *)criNcv_SetHardwareSamplingRate_ANDROID, (void **)&criNcv_SetHardwareSamplingRate_ANDROID_Hooked) == RS_SUCCESS) {
             LOGI("Successfully hooked criNcv_SetHardwareSamplingRate_ANDROID.");
+            srcFunc = (char *)setHWSampleRate;
+            for (int i = 0; i < 8; i++) {
+                LOGI("srcFunc dump insn %d = %02x%02x%02x%02x", i, srcFunc[0], srcFunc[1], srcFunc[2], srcFunc[3]);
+                srcFunc += i * 4;
+            }
         }
         else {
             initialization_error("Unable to hook criNcv_SetHardwareSamplingRate_ANDROID.");
