@@ -488,6 +488,14 @@ void initialization_error(const char* error) {
     displayMessage("MagiaTranslate Error", errorMsg);
 }
 
+void dumpFunc(char *funcptr, int insn_count) {
+    for (int i = 0; i < insn_count; i += 2) {
+        LOGI("%02x%02x%02x%02x", funcptr[0], funcptr[1], funcptr[2], funcptr[3]);
+        LOGI("%02x%02x%02x%02x", funcptr[4], funcptr[5], funcptr[6], funcptr[7]);
+        funcptr += i * 8;
+    }
+}
+
 // Hook loop function. We run this in a separate thread so it doesn't block the main thread.
 void *hook_loop(void *arguments) {
     std::unique_ptr<hook_loop_args> args((struct hook_loop_args *)arguments);
@@ -559,17 +567,13 @@ void *hook_loop(void *arguments) {
 */
 
     void *setHWSampleRate = lookup_symbol(libLocation, "criNcv_SetHardwareSamplingRate_ANDROID");
-    char *srcFunc;
 
     if (setHWSampleRate != nullptr) {
         LOGD("Found criNcv_SetHardwareSamplingRate_ANDROID at %p.", (void *)setHWSampleRate);
+        dumpFunc((char *)setHWSampleRate, 6);
         if (DobbyHook(setHWSampleRate, (void *)criNcv_SetHardwareSamplingRate_ANDROID, (void **)&criNcv_SetHardwareSamplingRate_ANDROID_Hooked) == RS_SUCCESS) {
             LOGI("Successfully hooked criNcv_SetHardwareSamplingRate_ANDROID.");
-            srcFunc = (char *)setHWSampleRate;
-            for (int i = 0; i < 8; i++) {
-                LOGI("srcFunc dump insn %d = %02x%02x%02x%02x", i, srcFunc[0], srcFunc[1], srcFunc[2], srcFunc[3]);
-                srcFunc += i * 4;
-            }
+            dumpFunc((char *)setHWSampleRate, 6);
         }
         else {
             initialization_error("Unable to hook criNcv_SetHardwareSamplingRate_ANDROID.");
